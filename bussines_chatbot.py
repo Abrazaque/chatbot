@@ -2,6 +2,13 @@ import streamlit as st
 import requests
 import time
 import hashlib
+import logging
+
+# ==========================
+# Logging Configuration
+# ==========================
+logging.basicConfig(level=logging.ERROR)
+logger = logging.getLogger(__name__)
 
 # ==========================
 # User Authentication Setup
@@ -10,6 +17,7 @@ import hashlib
 users = {
     "Moin": hashlib.sha256("user1".encode()).hexdigest(),
     "user2": hashlib.sha256("password2".encode()).hexdigest(),
+    # Add more users as needed
 }
 
 def verify_password(username, password):
@@ -26,7 +34,13 @@ def verify_password(username, password):
 class BusinessChatbot:
     def __init__(self):
         # Retrieve the API key from Streamlit Secrets
-        self.api_key = st.secrets["NVIDIA_API_KEY"]
+        try:
+            self.api_key = st.secrets["NVIDIA_API_KEY"]
+        except KeyError:
+            logger.error("NVIDIA_API_KEY not found in Streamlit secrets.")
+            st.error("Server configuration error. Please contact the administrator.")
+            st.stop()
+        
         self.base_url = "https://integrate.api.nvidia.com/v1"
 
     def get_response(self, prompt, max_tokens=200):
@@ -47,7 +61,8 @@ class BusinessChatbot:
             response.raise_for_status()
             return response.json()['choices'][0]['text'].strip()
         except Exception as e:
-            return f"An error occurred: {e}"
+            logger.error(f"API request failed: {e}")
+            return "An error occurred while processing your request. Please try again later."
 
     def answer_business_question(self, question):
         prompt = f"""You are a professional business assistant. Please provide a helpful and insightful answer to the following business-related question:
@@ -208,7 +223,8 @@ def main():
         with tab1:
             st.header("Ask a Business Question")
             question = st.text_area("Enter your business-related question:", height=150)
-            if st.button("Get Answer"):
+            get_answer = st.button("Get Answer")
+            if get_answer:
                 if question.strip() == "":
                     st.error("Please enter a valid question.")
                 else:
@@ -220,7 +236,8 @@ def main():
         with tab2:
             st.header("Business Idea Brainstorming")
             topic = st.text_input("Enter a business topic for brainstorming:")
-            if st.button("Generate Ideas"):
+            generate_ideas = st.button("Generate Ideas")
+            if generate_ideas:
                 if topic.strip() == "":
                     st.error("Please enter a valid topic.")
                 else:
