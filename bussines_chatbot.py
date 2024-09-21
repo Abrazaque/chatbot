@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 # ==========================
 
 users = {
-    "Moin": hashlib.sha256("user1".encode()).hexdigest(),
+    "Moin": hashlib.sha256("user2".encode()).hexdigest(),
     "user2": hashlib.sha256("password2".encode()).hexdigest(),
     # Add more users as needed
 }
