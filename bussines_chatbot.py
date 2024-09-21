@@ -10,7 +10,6 @@ import hashlib
 users = {
     "Moin": hashlib.sha256("user1".encode()).hexdigest(),
     "user2": hashlib.sha256("password2".encode()).hexdigest(),
-    # Add more users as needed
 }
 
 def verify_password(username, password):
@@ -25,8 +24,9 @@ def verify_password(username, password):
 # ==========================
 
 class BusinessChatbot:
-    def __init__(self, api_key):
-        self.api_key = api_key
+    def __init__(self):
+        # Retrieve the API key from Streamlit Secrets
+        self.api_key = st.secrets["NVIDIA_API_KEY"]
         self.base_url = "https://integrate.api.nvidia.com/v1"
 
     def get_response(self, prompt, max_tokens=200):
@@ -161,8 +161,6 @@ def main():
         st.session_state.logged_in = False
     if 'username' not in st.session_state:
         st.session_state.username = ''
-    if 'api_key' not in st.session_state:
-        st.session_state.api_key = ''
     if 'chat_history' not in st.session_state:
         st.session_state.chat_history = []
 
@@ -194,81 +192,63 @@ def main():
             # Clear session state
             st.session_state.logged_in = False
             st.session_state.username = ''
-            st.session_state.api_key = ''
             st.session_state.chat_history = []
             st.experimental_rerun()
         
         # ==========================
-        # API Key Input
+        # Initialize the Chatbot
         # ==========================
-        if not st.session_state.api_key:
-            st.header("🔑 Enter Your NVIDIA API Key")
-            with st.form("api_key_form"):
-                api_key = st.text_input("API Key", type="password")
-                save_key = st.form_submit_button("Save API Key")
-            
-            if save_key:
-                if api_key:
-                    st.session_state.api_key = api_key
-                    st.success("API Key saved successfully!")
-                    # Optionally, clear the form
-                    st.experimental_rerun()
-                else:
-                    st.error("Please enter a valid API Key.")
+        chatbot = BusinessChatbot()
         
-        else:
-            # Initialize the chatbot with the user's API key
-            chatbot = BusinessChatbot(st.session_state.api_key)
-            
-            # ==========================
-            # Chatbot Tabs
-            # ==========================
-            tab1, tab2 = st.tabs(["💬 Business Q&A", "💡 Idea Brainstorming"])
-            
-            with tab1:
-                st.header("Ask a Business Question")
-                question = st.text_area("Enter your business-related question:", height=150)
-                if st.button("Get Answer"):
-                    if question.strip() == "":
-                        st.error("Please enter a valid question.")
-                    else:
-                        with st.spinner("Thinking..."):
-                            answer = chatbot.answer_business_question(question)
-                            st.success("Here's your answer:")
-                            st.write(answer)
-            
-            with tab2:
-                st.header("Business Idea Brainstorming")
-                topic = st.text_input("Enter a business topic for brainstorming:")
-                if st.button("Generate Ideas"):
-                    if topic.strip() == "":
-                        st.error("Please enter a valid topic.")
-                    else:
-                        with st.spinner("Brainstorming..."):
-                            ideas = chatbot.brainstorm_ideas(topic)
-                            st.success("Here are some innovative ideas:")
-                            st.write(ideas)
-            
-            # ==========================
-            # Chat Interface
-            # ==========================
-            st.header("💬 Chat with Business AI")
-            
-            for i, (role, content) in enumerate(st.session_state.chat_history):
-                with st.chat_message(role):
-                    st.write(content)
-            
-            user_input = st.chat_input("Ask me anything about business:")
-            if user_input:
-                st.session_state.chat_history.append(("user", user_input))
-                with st.chat_message("user"):
-                    st.write(user_input)
-                
-                with st.chat_message("assistant"):
+        # ==========================
+        # Chatbot Tabs
+        # ==========================
+        tab1, tab2 = st.tabs(["💬 Business Q&A", "💡 Idea Brainstorming"])
+        
+        with tab1:
+            st.header("Ask a Business Question")
+            question = st.text_area("Enter your business-related question:", height=150)
+            if st.button("Get Answer"):
+                if question.strip() == "":
+                    st.error("Please enter a valid question.")
+                else:
                     with st.spinner("Thinking..."):
-                        response = chatbot.answer_business_question(user_input)
-                        st.write(response)
-                st.session_state.chat_history.append(("assistant", response))
+                        answer = chatbot.answer_business_question(question)
+                        st.success("Here's your answer:")
+                        st.write(answer)
+        
+        with tab2:
+            st.header("Business Idea Brainstorming")
+            topic = st.text_input("Enter a business topic for brainstorming:")
+            if st.button("Generate Ideas"):
+                if topic.strip() == "":
+                    st.error("Please enter a valid topic.")
+                else:
+                    with st.spinner("Brainstorming..."):
+                        ideas = chatbot.brainstorm_ideas(topic)
+                        st.success("Here are some innovative ideas:")
+                        st.write(ideas)
+        
+        # ==========================
+        # Chat Interface
+        # ==========================
+        st.header("💬 Chat with Business AI")
+        
+        for i, (role, content) in enumerate(st.session_state.chat_history):
+            with st.chat_message(role):
+                st.write(content)
+        
+        user_input = st.chat_input("Ask me anything about business:")
+        if user_input:
+            st.session_state.chat_history.append(("user", user_input))
+            with st.chat_message("user"):
+                st.write(user_input)
+            
+            with st.chat_message("assistant"):
+                with st.spinner("Thinking..."):
+                    response = chatbot.answer_business_question(user_input)
+                    st.write(response)
+            st.session_state.chat_history.append(("assistant", response))
 
 # ==========================
 # Run the App
