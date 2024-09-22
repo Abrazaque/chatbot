@@ -35,8 +35,8 @@ class BusinessChatbot:
     def __init__(self):
         # Retrieve the API key from Streamlit Secrets
         try:
-            # self.api_key = st.secrets["NVIDIA_API_KEY"]
-            api_key=os.environ["NVIDIA_API_KEY"]
+            self.api_key = st.secrets["NVIDIA_API_KEY"]
+            # api_key=os.environ["NVIDIA_API_KEY"]
         except KeyError:
             logger.error("NVIDIA_API_KEY not found in Streamlit secrets.")
             st.error("Server configuration error. Please contact the administrator.")
