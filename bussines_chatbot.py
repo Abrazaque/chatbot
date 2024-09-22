@@ -195,8 +195,7 @@ def main():
                 st.session_state.logged_in = True
                 st.session_state.username = username
                 st.success("Logged in successfully!")
-                # Optionally, clear the login form
-                st.experimental_rerun()
+                st.rerun()  # Updated from st.experimental_rerun()
             else:
                 st.error("Invalid username or password.")
     else:
